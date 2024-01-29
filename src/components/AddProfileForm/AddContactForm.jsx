@@ -1,26 +1,34 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
-import { addContact } from '../../redux/contactSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { Formik, Form, Field } from 'formik';
 import css from './AddContactForm.module.css';
+import { addContacts } from '../../redux/operations';
+import { selectContacts } from '../../redux/selectors';
 
 export const AddContactForm = () => {
   const dispatch = useDispatch();
-
-  const handleSubmitForm = evt => {
-    evt.preventDefault();
-    const name = evt.target.elements.name.value;
-    const number = evt.target.elements.number.value;
-
-    dispatch(addContact(name, number));
-
-    evt.target.reset();
-  };
+  const contacts = useSelector(selectContacts);
 
   return (
-    <form className={css.form} onSubmit={handleSubmitForm}>
+    <Formik
+    initialValues={{ name: '', phone: '' }}
+    onSubmit={({ name, phone }, actions) => {
+      const existContact = contacts.find(
+        (contact) => contact.name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (existContact) {
+        alert(`${name} is already in contacts`);
+      } else {
+        dispatch(addContacts({ name, phone }));
+        actions.resetForm();
+      }
+    }}
+  >
+    <Form className={css.form}>
       <label className={css.label}>
         <span>Name: </span>
-        <input
+        <Field
           type="text"
           placeholder="Name"
           name="name"
@@ -31,10 +39,10 @@ export const AddContactForm = () => {
 
       <label className={css.label}>
         <span>Number: </span>
-        <input
+        <Field
           type="tel"
           placeholder="111-11-11"
-          name="number"
+          name="phone"
           title="Number may contain only numbers and dashes. For example 111-11-11"
           required
         />
@@ -42,6 +50,8 @@ export const AddContactForm = () => {
       <button className={css.submit} type="submit">
         Add New Profile
       </button>
-    </form>
+    </Form>
+  </Formik>
+
   );
 };
